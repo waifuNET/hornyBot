@@ -8,7 +8,7 @@ const sqlite3 = require('sqlite3').verbose();
 const db = new sqlite3.Database('./rule34.db');
 
 db.serialize(() => {
-    db.run("CREATE TABLE IF NOT EXISTS used_images (id INT, channel VARCHAR(32), image_id INT, PRIMARY KEY(id ASC))")
+    db.run("CREATE TABLE IF NOT EXISTS `used_images` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `channel` VARCHAR(32), `image_id` INT)")
 });
 
 function delay(time) {
@@ -23,6 +23,17 @@ function AddIntervals(bot){
     bot.interval_GetContent_TIMER   = setInterval(async () => { bot.interval_ds_push(); }, getRndInteger(10000, 30000));
     bot.interval_PrepireUrls_TIMER  = setInterval(async () => { bot.interval_GetContent(); }, getRndInteger(30000, 60000));
     bot.interval_ds_push_TIMER      = setInterval(async () => { bot.interval_PrepireUrls(); }, getRndInteger(10000, 30000));
+    
+    bot.interval_output = setInterval(async () => { 
+        WriteLine(bot.channel + ": " + "PU: " + bot.POST_URL.length + " UC: " + bot.URLS_CASHE.length + " U: " + bot.URLS.length + " UU: " + bot.URLS_USED.length);
+     }, getRndInteger(15000, 30000));
+}
+
+function ClearIntervals(bot){
+    clearInterval(bot.interval_GetContent_TIMER);
+    clearInterval(bot.interval_PrepireUrls_TIMER);
+    clearInterval(bot.interval_ds_push_TIMER);
+    clearInterval(bot.interval_output);
 }
 
 function WriteLine(text){
@@ -49,14 +60,14 @@ class HornyBOT {
       this.interval_GetContent_TIMER = null;
       this.interval_PrepireUrls_TIMER = null;
       this.interval_ds_push_TIMER = null;
+      this.interval_output = null;
 
       this.MAIN_URL = "https://rule34.xxx";
     }
 
     DB_Add_ID(channel, id){
         const stmt = db.prepare("INSERT INTO used_images VALUES (NULL, ?, ?)");
-        stmt.run(channel);
-        stmt.run(id);
+        stmt.run(channel, id);
         stmt.finalize();
     }
 
@@ -126,7 +137,7 @@ class HornyBOT {
             await delay(100);
             //URLS_CHECK();
 
-            await db.get("SELECT COUNT(image_id) FROM used_images WHERE image_id == "+this.POST_URL[i][1]+" AND channel == \""+this.POST_URL[i][2]+"\"", async (err, row) => {
+            await db.get("SELECT COUNT(image_id) FROM used_images WHERE image_id LIKE "+this.POST_URL[i][1]+" AND channel LIKE \""+this.channel+"\"", async (err, row) => {
                 if(row['COUNT(image_id)'] <= 0){
                     this.f_mode = 0;
                     await this.PR_CORE(i, this.POST_URL[i][2]);
@@ -154,7 +165,7 @@ class HornyBOT {
                             
                             client.channels.cache.get(this.URLS[i][2]).send(this.URLS[i][0]);
                             this.URLS_USED.push(this.URLS[i]);
-                            this.DB_Add_ID(this.URLS[i][2], this.URLS[i][1]);
+                            this.DB_Add_ID(this.channel, this.URLS[i][1]);
                             //console.log(i +"/"+this.URLS.length+" push: " + this.URLS[i][1]);
                             WriteLine(this.channel + ": " + i +"/"+this.URLS.length+" push: " + this.URLS[i][1]);
                             await delay(5000);
@@ -163,7 +174,6 @@ class HornyBOT {
 
                         this.URLS_CHECK();
                         this.CLEAR_CASH();
-                        WriteLine(this.channel + ": " + "POST_URL: " + this.POST_URL.length + " URLS_CASHE: " + this.URLS_CASHE.length + " URLS: " + this.URLS.length + " URLS_USED: " + this.URLS_USED.length);
                         //console.log("POST_URL: " + this.POST_URL.length + " URLS_CASHE: " + this.URLS_CASHE.length + " URLS: " + this.URLS.length + " URLS_USED: " + this.URLS_USED.length);
                         this.ds_end = false;
                 }   
@@ -270,29 +280,12 @@ class HornyBOT {
     }
 }
 
-/*var CHANNEL_TAGS = [
-    ['1184189853257179237', ["kumasteam", "azto_dio", "spicy_moo", "thing_(athing)",
-    "kirill782", "remon11", "lewdcreationsai", "prrrab", "ahegaokami", 
-    "kakure_eria", "melowh", "greatodoggo", "yampa", // 50|50
-    "koahri", "houraku", "daebom", "genek", "khyleri", "beijuu",
-    // "rocksolidart", //meybe... not....
-    ]],
-    ['1185461417101508650', ['all']],
-]*/
-
-/*var TAGS = [ "kumasteam", "azto_dio", "spicy_moo", "thing_(athing)",
-"kirill782", "remon11", "lewdcreationsai", "prrrab", "ahegaokami", 
-"kakure_eria", "melowh", "greatodoggo", "yampa", // 50|50
-"koahri", "houraku", "daebom", "genek", "khyleri", "beijuu",
-// "rocksolidart", //meybe... not....
-];*/
-
 var client = null;
 
 function Init(){
     try{
         client = new discord.Client({ intents: [discord.GatewayIntentBits.Guilds] });
-        client.login(BOT_TOKEN)
+        client.login("MTE4NDE2MDUzMDY2ODIwMDEwOA.Gp82Ns.5cmDSmXBVRCWeni5buuWw0Yk_f_Gi-fFsMDLFw")
         client.on('ready', () => {
             //console.log(`Logged in as ${client.user.tag}!`);
             WriteLine(`Logged in as ${client.user.tag}!`);
@@ -332,21 +325,43 @@ async function updateIP(){
     }
 }
 
-setInterval(async () => await updateIP(), 10000);
-Init();
+var bots = [];
 
-function InitNewBot(channel, tags){
-    const bot = new HornyBOT(channel, tags);
-    AddIntervals(bot);
+function StartAPP(){
+    Init();
+    InitBots();
 }
 
-InitNewBot('1185461417101508650', ['all']); //rule34
-InitNewBot('1184189853257179237', ["kumasteam", "azto_dio", "spicy_moo", "thing_(athing)",
-"kirill782", "remon11", "lewdcreationsai", "prrrab", "ahegaokami", 
-"kakure_eria", "melowh", "greatodoggo", "yampa", // 50|50
-"koahri", "houraku", "daebom", "genek", "khyleri", "beijuu",
-// "rocksolidart", //meybe... not....
-]); //auto
+function RestartBot(){
+    bots.forEach(element => {
+        ClearIntervals(element);
+    });
+    bots = [];
+    StartAPP();
+}
+
+setInterval(async() => await RestartBot(), 60000*24*60);
+setInterval(async () => await updateIP(), 10000);
+
+function InitNewBot(channel, tags){
+    let bot = new HornyBOT(channel, tags);
+    AddIntervals(bot);
+    bots.push[bot];
+}
+
+function InitBots(){
+    InitNewBot('1185623640574787614', ['ai_generated']); // ai
+    InitNewBot('1185623743544963233', ['genshin_impact']); // auto
+    InitNewBot('1185622160052604999', ['all']); //rule34
+    InitNewBot('1185622110404616312', ["kumasteam", "azto_dio", "spicy_moo", "thing_(athing)",
+    "kirill782", "remon11", "lewdcreationsai", "prrrab", "ahegaokami", 
+    "kakure_eria", "melowh", "greatodoggo", "yampa", // 50|50
+    "koahri", "houraku", "daebom", "genek", "khyleri", "beijuu",
+    // "rocksolidart", //meybe... not....
+    ]); //auto
+}
+
+StartAPP();
 
 function getAllElement(text, rgx)
 {
