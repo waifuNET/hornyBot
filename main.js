@@ -51,6 +51,25 @@ function getRndInteger(min, max) {
     return Math.floor(Math.random() * (max - min + 1) ) + min;
   }
 
+function UAGR(list){
+    return list[getRndInteger(0, list.length - 1)];
+}
+
+function userAgentGenerate(){
+    // "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36 OPR/78.0.4093.153"
+    let browsers = ['Mozilla/5.0 ', 'Chrome/1.20 ', 'Opera/8.1 ', 'Yandex/9.1 '];
+    let windows = ['(Windows NT 10.0; Win64; x64) ', '(Windows NT 11.0; Win64; x64) ', '(Windows NT 10.0; Win32; x86) ', '(Windows NT 7.0; Win64; x64) ', '(Windows NT 7.0; Win32; x32) '];
+    let webkits = ['AppleWebKit/537.36 (KHTML, like Gecko) ', 'AppleWebKit/587.2 (KHTML, like Gecko) ' ];
+    let chromes = [ 'Chrome/92.0.4515.131 ', 'Chrome/93.1.23.31 ', 'Chrome/90.3.315.111 '];
+    let safari = [ 'Safari/537.36 ', 'Safari/521.321 ', 'Safari/314.36 '];
+    let opr = [ 'OPR/78.0.4093.153', 'OPR/80.0.4093.153', 'Chrome/23.5.315.113'];
+
+    let result = UAGR(browsers) + UAGR(windows) +  UAGR(webkits) +  UAGR(chromes) +  UAGR(safari) +  UAGR(opr);
+    WriteLine(result);
+    
+    return result;
+}
+
 class HornyBOT {
     constructor(channel, tags) {
       this.channel = channel;
@@ -68,26 +87,7 @@ class HornyBOT {
 
       this.MAIN_URL = "https://rule34.xxx";
       
-      this.userAgent = this.userAgentGenerate();
-    }
-
-    UAGR(list){
-        return list[getRndInteger(0, list.length - 1)];
-    }
-
-    userAgentGenerate(){
-        // "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36 OPR/78.0.4093.153"
-        let browsers = ['Mozilla/5.0 ', 'Chrome/1.20 ', 'Opera/8.1 ', 'Yandex/9.1 '];
-        let windows = ['(Windows NT 10.0; Win64; x64) ', '(Windows NT 11.0; Win64; x64) ', '(Windows NT 10.0; Win32; x86) ', '(Windows NT 7.0; Win64; x64) ', '(Windows NT 7.0; Win32; x32) '];
-        let webkits = ['AppleWebKit/537.36 (KHTML, like Gecko) ', 'AppleWebKit/587.2 (KHTML, like Gecko) ' ];
-        let chromes = [ 'Chrome/92.0.4515.131 ', 'Chrome/93.1.23.31 ', 'Chrome/90.3.315.111 '];
-        let safari = [ 'Safari/537.36 ', 'Safari/521.321 ', 'Safari/314.36 '];
-        let opr = [ 'OPR/78.0.4093.153', 'OPR/80.0.4093.153', 'Chrome/23.5.315.113'];
-
-        let result = this.UAGR(browsers) + this.UAGR(windows) +  this.UAGR(webkits) +  this.UAGR(chromes) +  this.UAGR(safari) +  this.UAGR(opr);
-        WriteLine(result);
-        
-        return result;
+      this.userAgent = userAgentGenerate();
     }
 
     DB_Add_ID(channel, id){
@@ -134,7 +134,7 @@ class HornyBOT {
         await rp({
             uri:this.MAIN_URL + this.POST_URL[i][0],
             headers:{
-                'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36 OPR/78.0.4093.153"
+                'User-Agent': this.userAgent,
             } 
         })
         .then((html) => {
@@ -329,7 +329,7 @@ async function GET_REQUEST(url)
     await rp({
         uri:url,
         headers:{
-            'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36 OPR/78.0.4093.153"
+            'User-Agent': userAgentGenerate(),
         } 
     })
     .catch((error) => {
