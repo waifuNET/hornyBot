@@ -47,6 +47,10 @@ function WriteLine(text){
     console.log(datetime + ": " + text);
 }
 
+function getRndInteger(min, max) {
+    return Math.floor(Math.random() * (max - min + 1) ) + min;
+  }
+
 class HornyBOT {
     constructor(channel, tags) {
       this.channel = channel;
@@ -63,6 +67,27 @@ class HornyBOT {
       this.interval_output = null;
 
       this.MAIN_URL = "https://rule34.xxx";
+      
+      this.userAgent = this.userAgentGenerate();
+    }
+
+    UAGR(list){
+        return list[getRndInteger(0, list.length - 1)];
+    }
+
+    userAgentGenerate(){
+        // "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36 OPR/78.0.4093.153"
+        let browsers = ['Mozilla/5.0 ', 'Chrome/1.20 ', 'Opera/8.1 ', 'Yandex/9.1 '];
+        let windows = ['(Windows NT 10.0; Win64; x64) ', '(Windows NT 11.0; Win64; x64) ', '(Windows NT 10.0; Win32; x86) ', '(Windows NT 7.0; Win64; x64) ', '(Windows NT 7.0; Win32; x32) '];
+        let webkits = ['AppleWebKit/537.36 (KHTML, like Gecko) ', 'AppleWebKit/587.2 (KHTML, like Gecko) ' ];
+        let chromes = [ 'Chrome/92.0.4515.131 ', 'Chrome/93.1.23.31 ', 'Chrome/90.3.315.111 '];
+        let safari = [ 'Safari/537.36 ', 'Safari/521.321 ', 'Safari/314.36 '];
+        let opr = [ 'OPR/78.0.4093.153', 'OPR/80.0.4093.153', 'Chrome/23.5.315.113'];
+
+        let result = this.UAGR(browsers) + this.UAGR(windows) +  this.UAGR(webkits) +  this.UAGR(chromes) +  this.UAGR(safari) +  this.UAGR(opr);
+        WriteLine(result);
+        
+        return result;
     }
 
     DB_Add_ID(channel, id){
@@ -75,7 +100,7 @@ class HornyBOT {
         await rp({
             uri:XXX,
             headers:{
-                'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36 OPR/78.0.4093.153"
+                'User-Agent': this.userAgent,
             } 
         })
         .then((html) => {
@@ -140,7 +165,9 @@ class HornyBOT {
             await db.get("SELECT COUNT(image_id) FROM used_images WHERE image_id LIKE "+this.POST_URL[i][1]+" AND channel LIKE \""+this.channel+"\"", async (err, row) => {
                 if(row['COUNT(image_id)'] <= 0){
                     this.f_mode = 0;
-                    await this.PR_CORE(i, this.POST_URL[i][2]);
+                    if(this.POST_URL.length > 0 && this.POST_URL[i].length > 0){
+                        await this.PR_CORE(i, this.POST_URL[i][2]);
+                    }
                 }
                 else{
                     this.f_mode++;
@@ -285,7 +312,7 @@ var client = null;
 function Init(){
     try{
         client = new discord.Client({ intents: [discord.GatewayIntentBits.Guilds] });
-        client.login("MTE4NDE2MDUzMDY2ODIwMDEwOA.Gp82Ns.5cmDSmXBVRCWeni5buuWw0Yk_f_Gi-fFsMDLFw")
+        client.login("MTE4NDE2MDUzMDY2ODIwMDEwOA.G0ossD._JefFkb00qR-R8dedylnin5o4jBi8P0DreEAo8")
         client.on('ready', () => {
             //console.log(`Logged in as ${client.user.tag}!`);
             WriteLine(`Logged in as ${client.user.tag}!`);
@@ -351,6 +378,7 @@ function InitNewBot(channel, tags){
 
 function InitBots(){
     InitNewBot('1185623640574787614', ['ai_generated']); // ai
+    InitNewBot('1189246568646320188', ['ikemeru19', 'PersonalAMI', 'Sirfy', 'Tarakanovich', 'Ayanakitori', 'Manzai_sugar', 'Gomadare', 'Mirukuro092', 'mirin_chikuwa', 'makin_tama', 'gins']);
     InitNewBot('1185623743544963233', ['genshin_impact']); // auto
     InitNewBot('1185622160052604999', ['all']); //rule34
     InitNewBot('1185622110404616312', ["kumasteam", "azto_dio", "spicy_moo", "thing_(athing)",
